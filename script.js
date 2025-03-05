@@ -1,6 +1,20 @@
 const canvas = document.getElementById('jogoCanvas')
 const ctx = canvas.getContext('2d')
 
+let gameover = false
+let pontos = 0
+
+function congelarTela() {
+    document.getElementById('overlay').style.display = 'block'
+  }
+
+  document.addEventListener("click", (e) =>{
+    if(gameover){
+        location.reload()
+    }
+})
+
+
 class Entidade {
     #gravidade
     constructor(propriedades){
@@ -75,10 +89,13 @@ class Bola extends Entidade {
     }
 
     verificarColisaoBloco(bloco) {
-        if (this.x + this.largura > bloco.x && this.x < bloco.x + bloco.largura &&
+        if(this.x + this.largura > bloco.x && this.x < bloco.x + bloco.largura &&
             this.y + this.altura > bloco.y && this.y < bloco.y + bloco.altura) {
-            this.velocidadeY = -this.velocidadeY;
-            bloco.destruir();
+            if (!bloco.destruido) {
+                this.velocidadeY = -this.velocidadeY;
+                bloco.destruir()
+                pontos += 10
+            }
         }
     }
 }
@@ -93,9 +110,12 @@ class Bloco extends Entidade{
         this.destruido = true
     }
 
-    desenhar(ctx) {
-        if (!this.destruido) {
-            ctx.fillStyle = 'green'
+    desenhar2(ctx, cor) {
+        if (this.destruido) {
+            cor = "black"
+            ctx.fillStyle = cor
+        }else{
+            ctx.fillStyle = "red"
             ctx.fillRect(this.x, this.y, this.largura, this.altura)
         }
     }
@@ -135,18 +155,42 @@ for (r = 0; r < 9; r++){
     }
 }
 
+function gameOver() {
+    ctx.fillStyle = 'red'
+    ctx.fillRect((canvas.width / 2) - 200, (canvas.height / 2) - 50, 400, 100)
+    ctx.fillStyle = 'black'
+    ctx.font = "50px Arial"
+    ctx.fillText("Game Over", (canvas.width / 2) - 130, (canvas.height / 2) + 15)
+    gameover = true
+    congelarTela()
+}
+
+function verificarGameOver() {
+    if (bola.y + bola.altura >= canvas.height) {
+        gameOver()
+    }
+}
+
+function desenharPontos() {
+    ctx.fillStyle = 'white'
+    ctx.font = "20px Arial"
+    ctx.fillText("Pontos: " + pontos, 10, 30)
+}
+
 function loop(){
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     raquete.moverRaquete()
-    raquete.desenhar(ctx, 'white')
+    raquete.desenhar(ctx, 'blue')
     bola.moverBola()
     bola.verificarColisaoRaquete(raquete)
     bola.verificarColisaoParedes()
-    bola.desenhar(ctx, 'red')
+    bola.desenhar(ctx, 'white')
     blocos.forEach(bloco => {
-        bola.verificarColisaoBloco(bloco);
-        bloco.desenhar(ctx);
+        bola.verificarColisaoBloco(bloco)
+        bloco.desenhar2(ctx)
     })
+    verificarGameOver()
+    desenharPontos()
     requestAnimationFrame(loop)
     
 }
