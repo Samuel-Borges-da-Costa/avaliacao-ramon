@@ -73,7 +73,34 @@ class Bola extends Entidade {
             this.velocidadeY = -this.velocidadeY
         }
     }
+
+    verificarColisaoBloco(bloco) {
+        if (this.x + this.largura > bloco.x && this.x < bloco.x + bloco.largura &&
+            this.y + this.altura > bloco.y && this.y < bloco.y + bloco.altura) {
+            this.velocidadeY = -this.velocidadeY;
+            bloco.destruir();
+        }
+    }
 }
+
+class Bloco extends Entidade{
+    constructor(x, y) {
+        super({x, y, largura: 75, altura: 20})
+        this.destruido = false
+    }
+
+    destruir() {
+        this.destruido = true
+    }
+
+    desenhar(ctx) {
+        if (!this.destruido) {
+            ctx.fillStyle = 'green'
+            ctx.fillRect(this.x, this.y, this.largura, this.altura)
+        }
+    }
+}
+
 
 const raquete = new Raquete({
         x: 100,
@@ -99,7 +126,14 @@ const bola = new Bola({
     y: canvas.height - 40,
     largura: 20,
     altura: 20
-});
+})
+
+const blocos = []
+for (r = 0; r < 9; r++){
+    for (c = 0; c < 5; c++) {
+        blocos.push(new Bloco(r * (75 + 10) + 35, c * (20 + 10) + 30))
+    }
+}
 
 function loop(){
     ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -109,6 +143,10 @@ function loop(){
     bola.verificarColisaoRaquete(raquete)
     bola.verificarColisaoParedes()
     bola.desenhar(ctx, 'red')
+    blocos.forEach(bloco => {
+        bola.verificarColisaoBloco(bloco);
+        bloco.desenhar(ctx);
+    })
     requestAnimationFrame(loop)
     
 }
